@@ -1,0 +1,59 @@
+# Przykładowy termostat "Główny"
+
+climate:
+  - platform: generic_thermostat
+    name: Salon
+    heater: switch.salon_kaloryfery
+    target_sensor: sensor.salon_temperatura
+    min_temp: 15
+    max_temp: 25
+#    target_temp: 21
+    min_cycle_duration:
+      seconds: 30
+    cold_tolerance: 0.3
+    hot_tolerance: 0
+#    initial_hvac_mode: "heat"
+    keep_alive:
+      minutes: 10
+    away_temp: 18
+    precision: 0.1
+    
+# Odpowiadający mu "przełącznik" - w stanie on ustawia 2 termostaty na grzanie na 100%, w stanie "off" na 0%. 
+# To jest konfiguracja dla deCONZ, w Z2M jest inna implementacja tych głowic, trzeba zmieniać inny parametr.
+switch:
+  - platform: template
+    switches:
+      salon_kaloryfery:
+        friendly_name: "Salon kaloryfery"
+        value_template: "{{ is_state('climate.salon_prawy', 'heat') }}"
+        turn_on:
+          - service: climate.set_hvac_mode
+            data:
+              entity_id: climate.salon_lewy
+              hvac_mode: heat
+          - service: climate.set_hvac_mode
+            data:
+              entity_id: climate.salon_prawy
+              hvac_mode: heat
+        turn_off:
+          - service: climate.set_hvac_mode
+            data:
+              entity_id: climate.salon_lewy
+              hvac_mode: 'off'
+          - service: climate.set_hvac_mode
+            data:
+              entity_id: climate.salon_prawy
+              hvac_mode: 'off'
+              
+              
+              
+              
+              
+# Do tego w groups.yaml jest grupa dla wszystkich pomieszczeń. Jeśli chociaż jeden jest "on" to wtedy cała grupa jest "on" - a to włącza grzanie na piecu CO.
+kaloryfery:
+  name: Kaloryfery
+  entities:
+    - switch.salon_kaloryfery
+    - switch.sypialnia_kaloryfery
+ # and so on, and so on
+    
